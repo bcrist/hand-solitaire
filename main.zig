@@ -183,7 +183,52 @@ fn solve_iteration(draw: *std.ArrayList(Card), stack: *std.ArrayList(Card), disc
     return summary;
 }
 
-fn solve(draw: *std.ArrayList(Card), stack: *std.ArrayList(Card), discards: *std.ArrayList(Card), histogram: []usize, rnd: std.Random, out: *std.io.Writer) !void {
+const Permutation_Iterator = struct {
+    cards: []const Card,
+    next_indices: [52]u8 = std.simd.iota(u8, 52),
+    out_buf: [52]Card = undefined,
+
+    pub fn next(self: *Permutation_Iterator) ?[]const Card {
+        const num_cards = self.cards.len;
+        if (self.next_indices[0] >= num_cards) return null;
+        for (0..num_cards, self.next_indices[0..num_cards]) |out_index, card_index| {
+            self.out_buf[out_index] = self.cards[card_index];
+        }
+
+        var i: usize = num_cards;
+        while (i > 0) : (i -= 1) {
+            if (self.find_next_index(i - 1, self.next_indices[i - 1] + 1)) {
+                for (i..num_cards) |j| {
+                    std.debug.assert(self.find_next_index(j, 0));
+                }
+                break;
+            }
+        } else self.next_indices[0] = 0xFF;
+
+        return self.out_buf[0..self.cards.len];
+    }
+
+    fn find_next_index(self: *Permutation_Iterator, slot: usize, first: u8) bool {
+        var next_index = first;
+        while (true) {
+            if (next_index >= self.cards.len) {
+                return false;
+            }
+
+            for (self.next_indices[0..slot]) |used_index| {
+                if (next_index == used_index) {
+                    next_index += 1;
+                    break;
+                }
+            } else {
+                self.next_indices[slot] = next_index;
+                return true;
+            }
+        }
+    }
+};
+
+fn solve(draw: *std.ArrayList(Card), stack: *std.ArrayList(Card), discards: *std.ArrayList(Card), histogram: []usize, rnd: std.Random, out: *std.io.Writer) !bool {
     std.debug.assert(draw.items.len == 52);
     std.debug.assert(stack.items.len == 0);
     std.debug.assert(discards.items.len == 0);
@@ -207,10 +252,7 @@ fn solve(draw: *std.ArrayList(Card), stack: *std.ArrayList(Card), discards: *std
             } else {
                 try out.print("Won after {} iterations\n", .{ iterations });
             }
-            break;
-        } else if (iterations > 1000000) {
-            histogram[0] += 1;
-            break;
+            return true;
         }
         shuffle(stack.items, rnd);
         const temp = draw.*;
@@ -219,7 +261,46 @@ fn solve(draw: *std.ArrayList(Card), stack: *std.ArrayList(Card), discards: *std
         draw.appendSliceAssumeCapacity(discards.items);
         discards.clearRetainingCapacity();
         std.debug.assert(stack.items.len == 0);
+        if (iterations > 1000) {
+            histogram[0] += 1;
+            return false;
+        }
     }
+}
+
+fn solve_exhaustive(allocator: std.mem.Allocator, deck_set: *std.AutoHashMapUnmanaged([52]Card, void), draw: *std.ArrayList(Card), stack: *std.ArrayList(Card), discards: *std.ArrayList(Card), out: *std.io.Writer) !bool {
+    std.debug.assert(draw.items.len == 52);
+    std.debug.assert(stack.items.len == 0);
+    std.debug.assert(discards.items.len == 0);
+
+    const gop = try deck_set.getOrPut(allocator, draw.items[0..52].*);
+    if (gop.found_existing) return false;
+    gop.key_ptr.* = draw.items[0..52].*;
+
+    _ = try solve_iteration(draw, stack, discards, out);
+    if (stack.items.len == 0) return true;
+
+    var stack_copy_buf: [52]Card = undefined;
+    var stack_copy: std.ArrayList(Card) = .initBuffer(&stack_copy_buf);
+    stack_copy.appendSliceAssumeCapacity(stack.items);
+
+    var discards_copy_buf: [52]Card = undefined;
+    var discards_copy: std.ArrayList(Card) = .initBuffer(&discards_copy_buf);
+    discards_copy.appendSliceAssumeCapacity(discards.items);
+
+    var iter: Permutation_Iterator = .{ .cards = stack_copy.items };
+    while (iter.next()) |shuffled_stack| {
+        draw.clearRetainingCapacity();
+        stack.clearRetainingCapacity();
+        discards.clearRetainingCapacity();
+        draw.appendSliceAssumeCapacity(shuffled_stack);
+        draw.appendSliceAssumeCapacity(discards_copy.items);
+        std.debug.assert(draw.items.len == 52);
+
+        if (try solve_exhaustive(allocator, deck_set, draw, stack, discards, out)) return true;
+    }
+
+    return false;
 }
 
 
@@ -240,13 +321,31 @@ pub fn main() !void {
 
     var histogram: [1000]usize = @splat(0);
 
+    const gpa = std.heap.smp_allocator;
+
     for (0..1000_000) |_| {
         draw.clearRetainingCapacity();
         stack.clearRetainingCapacity();
         discards.clearRetainingCapacity();
         draw.appendSliceAssumeCapacity(&default_deck);
         shuffle(draw.items, rng.random());
-        try solve(&draw, &stack, &discards, &histogram, rng.random(), &stdout.interface);
+        if (!try solve(&draw, &stack, &discards, &histogram, rng.random(), &stdout.interface)) {
+            var decks: std.AutoHashMapUnmanaged([52]Card, void) = .empty;
+            defer decks.deinit(gpa);
+
+            if (!try solve_exhaustive(gpa, &decks, &draw, &stack, &discards, &stdout.interface)) {
+                try stdout.interface.print("Found set of {} unwinnable decks:\n", .{ decks.size });
+            } else {
+                try stdout.interface.print("Found eventual solution to set of {} decks thought unwinnable:\n", .{ decks.size });
+            }
+            // var iter = decks.keyIterator();
+            // while (iter.next()) |deck| {
+            //     for (deck) |card| {
+            //         try stdout.interface.print(" {t}", .{ card });
+            //     }
+            //     try stdout.interface.writeAll("\n");
+            // }
+        }
         try stdout.interface.flush();
     }
 

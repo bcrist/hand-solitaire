@@ -15,14 +15,16 @@ This repo simulates many games and computes a histogram of how many iterations a
 7. Continue drawing face-up cards from the bottom of the hand to see if they trigger any discards at the top of the hand.  If you've drawn at least 3 face-up cards in a row without being able to discard, no further discards will be possible.
 8. If all cards have been placed in the discard pile, you've won!  Otherwise you have completed one "iteration."  Shuffle the remaining cards in your hand, then place them on the *bottom* of the discard pile.  Flip the discard pile over and go back to step 2.
 
-## Statistics
+## Statistics & Notes
 
 * The chance of winning on the first iteration is approximately 1.3%
 * The chance of winning in 10 iterations or less is approximately 22.5%
 * The chance of winning in 25 iterations or less is approximately 51%
 * There is no upper limit to the number of iterations that might be required to win, since the shuffle in step 8 does not guarantee that an "unvisited" permutation is selected, but after simulating several million games, I have only seen one winning game that required over 500 iterations.
-* It is possible to get stuck in a "loop" where it is impossible to win, though the chance is only about 0.06%.  This happens when there are very few cards remaining at the end of an iteration, and all permutations of decks to start the next iteration also yield a small number of cards remaining, and so on recursively, where the set of "reachable" decks is small and does not contain any winning decks.
+* Approdimately 0.06% of all deck permutations are impossible to win (see below).
 * The shuffling of remaining cards in step 8 is very important!  If you omit this, then approximately half of all starting decks can never win.
+
+It is possible to get stuck in a "loop" where it is impossible to win.  The game is entirely deterministic except for the shuffle in step 8, so if only a few cards remain at the end, there are only a few permutations for the next iteration's deck.  Usually after the next iteration(s) the set of possible decks will have expanded to include some winning decks, but there are many small sets of decks where all possible permutations for the next iteration are also in the same set, and none of the decks in the set can win.  Interestingly, almost all of these "poison" deck sets contain 48 different decks, though I have also seen sets of size 4, 8, 12, and 36.
 
 Here is a histogram of 1,000,000 random games:
 ![Histogram](histogram.png)
