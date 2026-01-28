@@ -18,8 +18,8 @@ This repo simulates many games and computes a histogram of how many iterations a
 ## Statistics
 
 * The chance of winning on the first iteration is approximately 1.3%
-* The chance of winning within 10 iterations or less is approximately 22.5%
-* The chance of winning within 25 iterations of less is approximately 51%
+* The chance of winning in 10 iterations or less is approximately 22.5%
+* The chance of winning in 25 iterations or less is approximately 51%
 * There is no upper limit to the number of iterations that might be required to win, since the shuffle in step 8 does not guarantee that an "unvisited" permutation is selected, but after simulating several million games, I have only seen one winning game that required over 500 iterations.
 * It is possible to get stuck in a "loop" where it is impossible to win, though the chance is only about 0.06%.  This happens when there are very few cards remaining at the end of an iteration, and all permutations of decks to start the next iteration also yield a small number of cards remaining, and so on recursively, where the set of "reachable" decks is small and does not contain any winning decks.
 * The shuffling of remaining cards in step 8 is very important!  If you omit this, then approximately half of all starting decks can never win.
