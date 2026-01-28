@@ -171,9 +171,13 @@ fn solve_iteration(draw: *std.ArrayList(Card), stack: *std.ArrayList(Card), disc
         while (try check_for_discards(stack, discards, &summary, out)) {}
     }
 
-    for (0..3) |_| {
+    var extra: usize = 0;
+    while (extra < 3) {
         rotate_card(stack);
-        while (try check_for_discards(stack, discards, &summary, out)) {}
+        extra += 1;
+        while (try check_for_discards(stack, discards, &summary, out)) {
+            extra = 0;
+        }
     }
 
     return summary;
@@ -205,7 +209,7 @@ fn solve(draw: *std.ArrayList(Card), stack: *std.ArrayList(Card), discards: *std
             }
             break;
         } else if (iterations > 1000000) {
-            try out.print("Giving up after {} iterations\n", .{ iterations });
+            histogram[0] += 1;
             break;
         }
         shuffle(stack.items, rnd);
