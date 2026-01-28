@@ -23,5 +23,5 @@ This repo simulates many games and computes a histogram of how many iterations a
 * There is no upper limit to the number of iterations that might be required to win, since the shuffle in step 8 does not guarantee that an "unvisited" permutation is selected, but after simulating several million games, I have only seen one winning game that required over 500 iterations.
 * It is possible to get stuck in a "loop" where it is impossible to win, though the chance is only about 0.1%.  This happens when there are very few cards remaining at the end of an iteration, and all permutations of decks to start the next iteration also yield a small number of cards remaining, and so on recursively, where the set of "reachable" decks is small and does not contain any winning decks.
 
-Here is a histogram of 100000 random games:
+Here is a histogram of 100,000 random games:
 ![Histogram](histogram.png)
