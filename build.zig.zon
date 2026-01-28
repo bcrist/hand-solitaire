@@ -1,0 +1,7 @@
+.{
+    .name = .hand_solitaire,
+    .version = "0.0.1",
+    .minimum_zig_version = "0.15.2",
+    .paths = .{""},
+    .fingerprint = 0x9f3cf10be843df7b,
+}
