@@ -26,5 +26,7 @@ This repo simulates many games and computes a histogram of how many iterations a
 
 It is possible to get stuck in a "loop" where it is impossible to win.  The game is entirely deterministic except for the shuffle in step 8, so if only a few cards remain at the end, there are only a few permutations for the next iteration's deck.  Usually after the next iteration(s) the set of possible decks will have expanded to include some winning decks, but there are many small sets of decks where all possible permutations for the next iteration are also in the same set, and none of the decks in the set can win.  Interestingly, almost all of these "poison" deck sets contain 48 different decks, though I have also seen sets of size 4, 8, 12, and 36.
 
+Some people play a variant of Hand Solitaire without step 7.  This step tends to reduce the number of cards remaining in the hand at the end of each iteration, so you might expect that playing without it would decrease the chance of getting stuck in an unwinnable set of decks, but playing without it also significantly decreases the number of winning decks overall, and it turns out that effect is more important.  Without this rule, the average number of iterations needed to win is approximately doubled, and the chance of getting an unwinnable deck is approximately 0.13%.
+
 Here is a histogram of 1,000,000 random games:
 ![Histogram](histogram.png)
