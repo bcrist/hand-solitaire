@@ -10,7 +10,7 @@ This repo simulates many games and computes a histogram of how many iterations a
 2. Hold the deck in your off hand with all cards face-down.
 3. Draw the card on the bottom of the deck and place it face-up on top of the deck, slightly to the side so you can see the card underneath.
 4. If there are at least 4 face-up cards and the first and fourth card have the same value (A23456789TJQK) then take those cards and the two cards between them and place them face-up on the discard pile.
-5. If there are at least 4 face-up cards and the first and fourth card have the same suit, remove the two cards in between them.  Place the removed cards face-up on the discard pile, then go back to step 4.
+5. If there are at least 4 face-up cards and the first and fourth card have the same suit, remove the two cards between them, but leave the suited cards in the hand.  Place the two removed cards face-up on the discard pile, then go back to step 4.
 6. Return to step 3 until all of the face-down cards have been revealed.
 7. Continue drawing face-up cards from the bottom of the hand to see if they trigger any discards at the top of the hand.  If you've drawn at least 3 face-up cards in a row without being able to discard, no further discards will be possible.
 8. If all cards have been placed in the discard pile, you've won!  Otherwise you have completed one "iteration."  Shuffle the remaining cards in your hand, then place them on the *bottom* of the discard pile.  Flip the discard pile over and go back to step 2.
